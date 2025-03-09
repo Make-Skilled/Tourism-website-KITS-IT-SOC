@@ -625,7 +625,12 @@ public class Admincontroller {
         }
 
         // Check if the room has any active bookings
-        List<bookings> activeBookings = bookingrepo.findByRoomNoAndStatusNot(room.getRoomNo(), "Cancelled");
+        // Convert Integer to String if room.getRoomNo() returns an Integer
+        List<bookings> activeBookings = bookingrepo.findByRoomNoAndStatusNot(
+            String.valueOf(room.getRoomNo()), // Convert to String using String.valueOf()
+            "Cancelled"
+        );
+        
         if (activeBookings != null && !activeBookings.isEmpty()) {
             redirectAttributes.addFlashAttribute("status", "Cannot delete a room with active bookings");
             return "redirect:/rooms";
