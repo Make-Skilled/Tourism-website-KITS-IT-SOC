@@ -592,9 +592,7 @@ public class Admincontroller {
         existingRoom.setRoomType(room.getRoomType());
         existingRoom.setCapacity(room.getCapacity());
         existingRoom.setPricePerNight(room.getPricePerNight());
-        existingRoom.setAmenities(room.getAmenities());
         existingRoom.setImageUrl(room.getImageUrl());
-        existingRoom.setDescription(room.getDescription());
 
         // Save the updated room
         roomRepo.save(existingRoom);
