@@ -9,5 +9,6 @@ import com.example.fullstack.model.rooms;
 public interface roomdetails extends JpaRepository<rooms,Long>{
 
 	List<rooms> findByUploadedBy(String uploadedBy);
+	List<bookings> findByRoomNoAndStatusNot(String roomNo, String status);
 
 }

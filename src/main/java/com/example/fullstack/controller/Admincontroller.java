@@ -526,6 +526,120 @@ public class Admincontroller {
         return "redirect:/ownerbookings"; // Redirect back to the bookings page
     }
 
+    // Add these methods to your existing Admincontroller class
+
+    @GetMapping("/edit/room/{id}")
+    public String showEditRoomForm(@PathVariable("id") Long id, Model model, HttpSession session) {
+        // Check if the owner is logged in
+        if (session.getAttribute("loggedInOwner") == null) {
+            model.addAttribute("status", "Please log in to access this page.");
+            return "login";
+        }
+        
+        // Store the room ID in the session for later use
+        session.setAttribute("updateRoomId", id);
+
+        // Retrieve the room by ID
+        rooms room = roomRepo.findById(id).orElse(null);
+        if (room == null) {
+            model.addAttribute("status", "Room not found");
+            return "redirect:/rooms";
+        }
+
+        // Check if the room belongs to the logged-in owner
+        String ownerEmail = (String) session.getAttribute("loggedInOwner");
+        if (!room.getUploadedBy().equals(ownerEmail)) {
+            model.addAttribute("status", "You don't have permission to edit this room");
+            return "redirect:/rooms";
+        }
+
+        // Add the room to the model
+        model.addAttribute("room", room);
+        return "editroom"; // Return the edit room form template
+    }
+
+    @PostMapping("/updateroom")
+    public String updateRoom(@ModelAttribute rooms room, HttpSession session, RedirectAttributes redirectAttributes) {
+        // Check if the owner is logged in
+        if (session.getAttribute("loggedInOwner") == null) {
+            redirectAttributes.addFlashAttribute("status", "Please log in to access this page.");
+            return "redirect:/login";
+        }
+
+        // Retrieve the room ID from the session
+        Long roomId = (Long) session.getAttribute("updateRoomId");
+        if (roomId == null) {
+            redirectAttributes.addFlashAttribute("status", "Room ID not found");
+            return "redirect:/rooms";
+        }
+
+        // Retrieve the existing room
+        rooms existingRoom = roomRepo.findById(roomId).orElse(null);
+        if (existingRoom == null) {
+            redirectAttributes.addFlashAttribute("status", "Room not found");
+            return "redirect:/rooms";
+        }
+
+        // Check if the room belongs to the logged-in owner
+        String ownerEmail = (String) session.getAttribute("loggedInOwner");
+        if (!existingRoom.getUploadedBy().equals(ownerEmail)) {
+            redirectAttributes.addFlashAttribute("status", "You don't have permission to update this room");
+            return "redirect:/rooms";
+        }
+
+        // Update the room details
+        existingRoom.setRoomNo(room.getRoomNo());
+        existingRoom.setRoomType(room.getRoomType());
+        existingRoom.setCapacity(room.getCapacity());
+        existingRoom.setPricePerNight(room.getPricePerNight());
+        existingRoom.setAmenities(room.getAmenities());
+        existingRoom.setImageUrl(room.getImageUrl());
+        existingRoom.setDescription(room.getDescription());
+
+        // Save the updated room
+        roomRepo.save(existingRoom);
+
+        // Add success message
+        redirectAttributes.addFlashAttribute("status", "Room updated successfully!");
+        return "redirect:/rooms";
+    }
+
+    @PostMapping("/delete/room/{id}")
+    public String deleteRoom(@PathVariable Long id, HttpSession session, RedirectAttributes redirectAttributes) {
+        // Check if the owner is logged in
+        if (session.getAttribute("loggedInOwner") == null) {
+            redirectAttributes.addFlashAttribute("status", "Please log in to access this page.");
+            return "redirect:/login";
+        }
+
+        // Retrieve the room by ID
+        rooms room = roomRepo.findById(id).orElse(null);
+        if (room == null) {
+            redirectAttributes.addFlashAttribute("status", "Room not found");
+            return "redirect:/rooms";
+        }
+
+        // Check if the room belongs to the logged-in owner
+        String ownerEmail = (String) session.getAttribute("loggedInOwner");
+        if (!room.getUploadedBy().equals(ownerEmail)) {
+            redirectAttributes.addFlashAttribute("status", "You don't have permission to delete this room");
+            return "redirect:/rooms";
+        }
+
+        // Check if the room has any active bookings
+        List<bookings> activeBookings = bookingrepo.findByRoomNoAndStatusNot(room.getRoomNo(), "Cancelled");
+        if (activeBookings != null && !activeBookings.isEmpty()) {
+            redirectAttributes.addFlashAttribute("status", "Cannot delete a room with active bookings");
+            return "redirect:/rooms";
+        }
+
+        // Delete the room
+        roomRepo.deleteById(id);
+
+        redirectAttributes.addFlashAttribute("status", "Room deleted successfully!");
+        return "redirect:/rooms";
+    }
+
 
     @GetMapping("/logout")
     public String logout(HttpSession session) {
