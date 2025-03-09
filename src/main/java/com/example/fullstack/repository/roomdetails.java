@@ -1,5 +1,4 @@
 package com.example.fullstack.repository;
-import com.example.fullstack.model.bookings;
 
 import java.util.List;
 

@@ -11,7 +11,6 @@ public interface bookingsdetails extends JpaRepository<bookings,Long>{
     List<bookings> findByBookedBy(String loggedInUser);
 
     List<bookings> findByHotelOwner(String loggedInOwner);
-    List<bookings> findByRoomNoAndStatusNot(String roomNo, String status);
 
 
 }
